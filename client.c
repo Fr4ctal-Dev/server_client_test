@@ -4,12 +4,13 @@
 
 #include <sys/shm.h>
 #include <sys/signal.h>
+#include <assert.h>
 #include "msg.h"
 
 #define SHMSZ 1000
 #define MKEY 1234
-#define SKEY1 3333
-#define SKEY2 9999
+#define SKEY1 5555
+#define SKEY2 8585
 #define TIMEOUT 10
 
 #define MAXUSERS 10
@@ -24,9 +25,14 @@ double getResult (){
     pid_t *pidShm = shmat(shmid1, NULL, 0);
     double *resShm = shmat(shmid2, NULL, 0);
 
+    //Check if the result is the one meant for this client, useful for multiuser
     for (int i = 0; i < MAXUSERS; ++i) {
-        if (pidShm[i] == getpid()){
-            return resShm[i];
+        //Check if SHM segments exist yet
+
+        if (*pidShm != 0xffffffffffffffff && *resShm != 0xffffffffffffffff) {
+            if (pidShm[i] == getpid()) {
+                return resShm[i];
+            }
         }
     }
 
@@ -34,7 +40,7 @@ double getResult (){
 }
 
 void alrmHandler(){
-    printf("Timeout: no entry found for your PID within specified timelimit %d\n", TIMEOUT);
+    printf("Timeout: no entry found for this PID within specified timelimit of %d seconds\n", TIMEOUT);
     exit(EXIT_FAILURE);
 }
 

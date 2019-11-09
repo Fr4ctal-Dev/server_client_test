@@ -8,8 +8,8 @@
 
 #define SHMSZ 1000
 #define MKEY 1234
-#define SKEY1 3333
-#define SKEY2 9999
+#define SKEY1 5555
+#define SKEY2 8585
 
 double calculateResult(double num){
     //todo calculation
@@ -39,26 +39,32 @@ int main(){
     int msgid = msgget(MKEY, IPC_CREAT | 0666);
     message_buf rbuf;
 
+
+
     while (1) {
+
     	msgrcv(msgid, &rbuf, sizeof(rbuf), 1, 0);
-    	printf("%s\n", rbuf.mtext);
+    	printf("Received message %s\n", rbuf.mtext);
         fflush(stdout);
         if (strcmp("", rbuf.mtext) != 0){
             double clientNum = parseNum(rbuf.mtext);
             pid_t clientPid = parsePid(rbuf.mtext);
-
+            sleep(15);
             pidShm[0] = clientPid;
             resShm[0] = calculateResult(clientNum);
 
             printf("Wrote to shm log at adresses %p, %p\n", &pidShm, &resShm);
 
-            shmctl( shmid1, IPC_RMID, NULL);
-            shmctl( shmid2, IPC_RMID, NULL);
-
-            break;
         }
+
         usleep(1500);
+
+
     }
+
+    shmctl( shmid1, IPC_RMID, NULL);
+    shmctl( shmid2, IPC_RMID, NULL);
+
 
     return 0;
 }
